@@ -20,8 +20,8 @@ Sistema automatizado para la **reserva de asientos** del transporte interno de l
 
 ## Uso
 
-- Create una cuenta ().
-- Ingresa solo con tus credenciales (correo y contraseña).
+- Create una cuenta (Nombres, apellidos, código de estudiante, selecciona tu facultad, correo institucional @uni.pe y tu contraseña segura).
+- Ingresa solo con tus credenciales registradas (solo correo y contraseña).
 - Reserva un asiento disponible por ruta y opcionalmente el paradero de destino.
 - Listo, no necesitas colocar tus datos para reservar un asiento ya que accedes directamente con tu cuenta.
 
