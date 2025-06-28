@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleccionar Asiento</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .bus-layout {
+            display: grid;
+            grid-template-columns: repeat(11, 1fr); /* 10 columnas + espacio para la cabina */
+            gap: 10px;
+            justify-items: center;
+            margin-top: 20px;
+        }
+        .seat {
+            width: 40px;
+            height: 40px;
+            background-color: #ddd;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+            line-height: 40px;
+            cursor: pointer;
+        }
+        .seat.selected {
+            background-color: #5cb85c;
+            color: white;
+        }
+        .empty {
+            visibility: hidden;
+        }
+        .driver-cabin {
+            grid-column: 11;
+            grid-row: span 4;
+            background-color: #333;
+            color: white;
+            text-align: center;
+            line-height: 160px;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+    </style>
+    <script>
+    function selectSeat(seat) {
+        if (seat.classList.contains('selected')) {
+            seat.classList.remove('selected'); // Desmarcar si ya está seleccionado
+        } else {
+            const selectedSeat = document.querySelector('.seat.selected');
+            if (selectedSeat) {
+                selectedSeat.classList.remove('selected');
+            }
+            seat.classList.add('selected'); // Marcar el asiento actual
+        }
+    }
+</script>
+</head>
+<body>
+    <div class="container">
+        <h1>Seleccionar Asiento</h1>
+        <div class="bus-select">
+            <label for="bus">Selecciona una ruta:</label>
+            <select id="bus" name="bus" required>
+                <option value="" disabled selected>Selecciona una ruta</option>
+            </select>
+        </div>
+        <script>
+            // Cargar las rutas desde el backend
+            fetch('/getrutas')
+                .then(response => response.json())
+                .then(data => {
+                    const busSelect = document.getElementById('bus');
+                    data.rutas.forEach(ruta => {
+                        const option = document.createElement('option');
+                        option.value = ruta;
+                        option.textContent = ruta;
+                        busSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error al cargar las rutas:', error));
+        </script>
+
+
+        <div class="bus-layout">
+            <!-- Fila 1 -->
+            {% for i in range(1, 11) %}
+                <div class="seat" onclick="selectSeat(this)">A{{ i }}</div>
+            {% endfor %}
+            <div class="driver-cabin">Cabina</div>
+            <!-- Fila 2 -->
+            {% for i in range(11, 21) %}
+                <div class="seat" onclick="selectSeat(this)">B{{ i }}</div>
+            {% endfor %}
+            <!-- Espacio central -->
+            {% for _ in range(10) %}
+                <div class="empty"></div>
+            {% endfor %}
+            <!-- Fila 3 -->
+            {% for i in range(21, 31) %}
+                <div class="seat" onclick="selectSeat(this)">C{{ i }}</div>
+            {% endfor %}
+            <!-- Fila 4 -->
+            {% for i in range(31, 41) %}
+                <div class="seat" onclick="selectSeat(this)">D{{ i }}</div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

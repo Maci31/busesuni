@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleccionar Asiento</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .bus-layout {
+            display: grid;
+            grid-template-columns: repeat(11, 1fr); /* 10 columnas + espacio para la cabina */
+            gap: 10px;
+            justify-items: center;
+            margin-top: 20px;
+        }
+        .seat {
+            width: 40px;
+            height: 40px;
+            background-color: #ddd;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+            line-height: 40px;
+            cursor: pointer;
+        }
+        .seat.selected {
+            background-color: #5cb85c;
+            color: white;
+        }
+        .empty {
+            visibility: hidden;
+        }
+        .driver-cabin {
+            grid-column: 11;
+            grid-row: span 4;
+            background-color: #333;
+            color: white;
+            text-align: center;
+            line-height: 160px;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        .empty {
+            visibility: hidden;
+        }
+        .form-actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .form-actions button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .form-actions button:hover {
+            background-color: #0056b3;
+        }
+        .form-actions button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .seat.reserved {
+            background-color: #ff4d4d;
+            cursor: not-allowed;
+        }
+        .main-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .paradero-select {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 250px;
+        }
+        .paradero-select label {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .paradero-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .paradero-table td {
+            padding: 10px;
+            text-align: left;
+        }
+        .paradero-table input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .paradero-list {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            margin-left: 20px;
+        }
+        .paradero-list label {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .paradero-list table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .paradero-list th, .paradero-list td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+    <script>
+        function loadParaderoList(ruta) {
+    const paraderoListTable = document.getElementById('paradero-list-table').querySelector('tbody');
+            paraderoListTable.innerHTML = ''; // Limpiar la tabla antes de llenarla
+
+            fetch(`/getasientos_completos_por_paradero?ruta=${ruta}`)
+                .then(response => response.json())
+                .then(data => {
+                    const paraderos = data.paraderos_con_asientos; // Actualizar la clave utilizada
+                    paraderos.forEach(paradero => {
+                        const row = document.createElement('tr');
+                        const nameCell = document.createElement('td');
+                        const seatsCell = document.createElement('td');
+
+                        nameCell.textContent = paradero.paradero; // Usar la clave correcta
+                        seatsCell.textContent = paradero.asientos;
+
+                        row.appendChild(nameCell);
+                        row.appendChild(seatsCell);
+                        paraderoListTable.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error al cargar la lista de paraderos:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const busSelect = document.getElementById('bus');
+            busSelect.addEventListener('change', () => {
+                loadParaderoList(busSelect.value);
+            });
+        });
+
+        function loadParaderos(ruta) {
+            const paraderoTable = document.getElementById('paradero-table');
+            paraderoTable.innerHTML = ''; // Limpiar la tabla antes de llenarla
+
+            fetch(`/getparaderos_por_ruta?ruta=${ruta}`)
+                .then(response => response.json())
+                .then(data => {
+                    const paraderos = data.paraderos;
+                    paraderos.forEach(paradero => {
+                        const row = document.createElement('tr');
+                        const cell = document.createElement('td');
+
+                        const radio = document.createElement('input');
+                        radio.type = 'radio';
+                        radio.name = 'paradero';
+                        radio.value = paradero.nombre;
+                        radio.required = true;
+
+                        cell.appendChild(radio);
+                        cell.appendChild(document.createTextNode(paradero.nombre));
+                        row.appendChild(cell);
+                        paraderoTable.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error al cargar los paraderos:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const busSelect = document.getElementById('bus');
+            busSelect.addEventListener('change', () => {
+                loadParaderos(busSelect.value);
+            });
+        });
+
+        function loadReservedSeats(bus) {
+            const allSeats = document.querySelectorAll('.seat');
+            allSeats.forEach(seat => {
+                seat.classList.remove('reserved', 'selected');
+                seat.onclick = () => selectSeat(seat); // Restaurar funcionalidad de clic
+            });
+
+            fetch(`/get-reserved-seats?ruta=${bus}`)
+                .then(response => response.json())
+                .then(data => {
+                    const reservedSeats = data.reserved_seats;
+                    reservedSeats.forEach(seat => {
+                        const seatElement = document.querySelector(`.seat[data-seat="${seat}"]`);
+                        if (seatElement) {
+                            seatElement.classList.add('reserved');
+                            seatElement.onclick = null; // Deshabilitar clic
+                        }
+                    });
+                })
+                .catch(error => console.error('Error al cargar los asientos reservados:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const busSelect = document.getElementById('bus');
+            busSelect.addEventListener('change', () => {
+                loadReservedSeats(busSelect.value);
+            });
+        });
+
+        function loadRoutes() {
+            fetch('/getrutas')
+                .then(response => response.json())
+                .then(data => {
+                    const busSelect = document.getElementById('bus');
+                    data.rutas.forEach(ruta => {
+                        const option = document.createElement('option');
+                        option.value = ruta;
+                        option.textContent = ruta;
+                        busSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error al cargar las rutas:', error));
+        }
+
+        function selectSeat(seat) {
+            const selectedSeat = document.querySelector('.seat.selected');
+            if (selectedSeat) {
+                selectedSeat.classList.remove('selected');
+            }
+            seat.classList.add('selected');
+            document.getElementById('asiento').value = seat.textContent;
+            checkFormValidity();
+        }
+
+        function checkFormValidity() {
+            const bus = document.getElementById('bus').value;
+            const asiento = document.getElementById('asiento').value;
+            const submitButton = document.getElementById('submitButton');
+            submitButton.disabled = !(bus && asiento);
+        }
+
+        function submitForm(event) {
+            event.preventDefault();
+            const bus = document.getElementById('bus').value;
+            const asiento = document.getElementById('asiento').value;
+            const paradero = document.querySelector('input[name="paradero"]:checked')?.value;
+            fetch('/register-asiento', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    bus: bus,
+                    asiento: asiento,
+                    paradero: paradero
+
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                } else {
+                    alert('Error al registrar el asiento.');
+                }
+            })
+            .catch(error => console.error('Error al enviar el formulario:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadRoutes();
+            document.getElementById('bus').addEventListener('change', checkFormValidity);
+        });
+    </script>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="paradero-select">
+            <label for="paradero">Selecciona un paradero:</label>
+            <table id="paradero-table" class="paradero-table">
+                <!-- Las filas se generarán dinámicamente -->
+            </table>
+        </div>
+
+        <div class="container">
+        <h1>Seleccionar Asiento</h1>
+        <form id="asientoForm" onsubmit="submitForm(event)">
+            <div class="bus-select">
+                <label for="bus">Selecciona una ruta:</label>
+                <select id="bus" name="bus" required>
+                    <option value="" disabled selected>Selecciona una ruta</option>
+                </select>
+            </div>
+
+            <div class="bus-layout">
+                <!-- Fila 1 -->
+                {% for i in range(1, 11) %}
+                    <div class="seat" data-seat="A{{ i }}" onclick="selectSeat(this)">A{{ i }}</div>
+                {% endfor %}
+                <div class="driver-cabin">Cabina</div>
+                <!-- Fila 2 -->
+                {% for i in range(11, 21) %}
+                    <div class="seat" data-seat="B{{ i }}" onclick="selectSeat(this)">B{{ i }}</div>
+                {% endfor %}
+                <!-- Espacio central -->
+                {% for _ in range(10) %}
+                    <div class="empty"></div>
+                {% endfor %}
+                <!-- Fila 3 -->
+                {% for i in range(21, 31) %}
+                    <div class="seat" data-seat="C{{ i }}" onclick="selectSeat(this)">C{{ i }}</div>
+                {% endfor %}
+                <!-- Fila 4 -->
+                {% for i in range(31, 41) %}
+                    <div class="seat" data-seat="D{{ i }}" onclick="selectSeat(this)">D{{ i }}</div>
+                {% endfor %}
+            </div>
+            <input type="hidden" id="asiento" name="asiento" required>
+            <div class="form-actions">
+                <button id="submitButton" type="submit" disabled>Registrar Asiento</button>
+            </div>
+        </form>
+    </div>
+
+        <div class="paradero-list">
+            <label>Lista de Paraderos por Ruta</label>
+            <table id="paradero-list-table">
+                <thead>
+                    <tr>
+                        <th>Paradero</th>
+                        <th>Alumnos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Las filas se generarán dinámicamente -->
+                </tbody>
+            </table>
+    </div>
+</body>
+</html>
